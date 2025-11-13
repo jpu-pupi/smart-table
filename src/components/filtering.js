@@ -14,43 +14,42 @@ export function initFiltering(elements) {
         });
     };
 
-  const applyFiltering = (query, state, action) => {
-    // код с обработкой очистки поля
-    if (action && action.name === "clear") {
-      const fieldName = action.dataset.field;
+    const applyFiltering = (query, state, action = null) => {
+        // Обработка очистки поля
+        if (action && action.name === 'clear') {
+            const parent = action.parentElement;
+            const input = parent.querySelector('select, input');
+            const field = action.dataset.field;
 
-      // Находим поле ввода по имени
-      const input = elements[fieldName];
-
-      if (input) {
-        // Сбрасываем значение поля ввода
-        input.value = "";
-
-        // Очищаем соответствующее поле в state
-        state[fieldName] = "";
-      }
-      // @todo: #4.5 — отфильтровать данные, используя компаратор
-      const filter = {};
-      Object.keys(elements).forEach((key) => {
-        if (elements[key]) {
-          if (
-            ["INPUT", "SELECT"].includes(elements[key].tagName) &&
-            elements[key].value
-          ) {
-            // ищем поля ввода в фильтре с непустыми данными
-            filter[`filter[${elements[key].name}]`] = elements[key].value; // чтобы сформировать в query вложенный объект фильтра
-          }
+            if (input) input.value = '';
+            if (field && field in state) {
+                delete state[field];
+            }
+            
+            // После очистки сразу возвращаем обновленный query
+            const filter = {};
+            Object.keys(elements).forEach(key => {
+                if (elements[key] && ['INPUT', 'SELECT'].includes(elements[key].tagName) && elements[key].value) {
+                    filter[`filter[${elements[key].name}]`] = elements[key].value;
+                }
+            });
+            
+            return Object.keys(filter).length ? Object.assign({}, query, filter) : query;
         }
-      });
 
-      return Object.keys(filter).length
-        ? Object.assign({}, query, filter)
-        : query; // если в фильтре что-то добавилось, применим к запросу
-    }
-  };
+        // Обычная фильтрация
+        const filter = {};
+        Object.keys(elements).forEach(key => {
+            if (elements[key] && ['INPUT', 'SELECT'].includes(elements[key].tagName) && elements[key].value) {
+                filter[`filter[${elements[key].name}]`] = elements[key].value;
+            }
+        });
 
-  return {
-    updateIndexes,
-    applyFiltering,
-  };
-}
+        return Object.keys(filter).length ? Object.assign({}, query, filter) : query;
+    };
+
+    return {
+        updateIndexes,
+        applyFiltering
+    };
+};
