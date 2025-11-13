@@ -14,7 +14,7 @@ import { initSearching } from "./components/searching.js";
 // @todo: подключение
 
 // Исходные данные используемые в render()
-const { data, ...indexes } = initData(sourceData);
+const api = initData(sourceData);
 
 
 function collectState() {
@@ -30,15 +30,18 @@ function collectState() {
 }
 
 
-function render(action) {
+async function render(action) {
   let state = collectState(); // состояние полей из таблицы
-  let result = [...data]; // копируем для последующего изменения
+  let query = {}; // копируем для последующего изменения
   // @todo: использование
-  result = applySearch(result, state, action);
-  result = applySorting(result, state, action);
-  result = applyPagination(result, state, action);
-  result = applyFiltering(result, state, action);
-  sampleTable.render(result);
+  // result = applySearch(result, state, action);
+  // result = applyFiltering(result, state, action);
+  // result = applySorting(result, state, action);
+   query = applyPagination(query, state, action);
+  
+  const { total, items } = await api.getRecords(query);
+  updatePagination(total, query);
+  sampleTable.render(items);
 }
 
 const sampleTable = initTable(
@@ -54,7 +57,7 @@ const sampleTable = initTable(
 // @todo: инициализация
 
 
-const applyPagination = initPagination(
+const {applyPagination, updatePagination} = initPagination (
   sampleTable.pagination.elements, // передаём сюда элементы пагинации, найденные в шаблоне
   (el, page, isCurrent) => {
     // и колбэк, чтобы заполнять кнопки страниц данными
@@ -72,13 +75,16 @@ const applySorting = initSorting([
     sampleTable.header.elements.sortByTotal
 ]);
 
-const applyFiltering = initFiltering(sampleTable.filter.elements, {    // передаём элементы фильтра
-    searchBySeller: indexes.sellers                                    // для элемента с именем searchBySeller устанавливаем массив продавцов
-});
+// const applyFiltering = initFiltering(sampleTable.filter.elements, {    // передаём элементы фильтра
+//     searchBySeller: indexes.sellers                                    // для элемента с именем searchBySeller устанавливаем массив продавцов
+// });
 
 const applySearch = initSearching('search');
 
 const appRoot = document.querySelector("#app");
 appRoot.appendChild(sampleTable.container);
+async function init(params) {
+  const indexes = await api.getIndexes();
+}
 
-render();
+init().then(render);
