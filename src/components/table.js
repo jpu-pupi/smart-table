@@ -26,11 +26,11 @@ export function initTable(settings, onAction) {
         onAction();
     });
     root.container.addEventListener ('reset', () => {
-        setTimeout (onAction);
+        setTimeout(onAction);
     });
     root.container.addEventListener ('submit', (e) => {
         e.preventDefault();
-        onAction(e.preventDefault);
+        onAction(e.submitter);
     })
 
     const render = (data) => {
